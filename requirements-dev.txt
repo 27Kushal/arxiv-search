@@ -1,0 +1,3 @@
+# Dev/test dependencies (not needed in production).
+pytest==9.1.1
+rank-bm25==0.2.2
