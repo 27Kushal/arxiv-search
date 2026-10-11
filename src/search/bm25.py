@@ -36,9 +36,15 @@ class BM25:
         self.n_docs = 0
 
     def fit(self, docs: list[str]) -> None:
-        # TODO: tokenize each doc, fill self.index / self.doc_len,
-        #       then set self.n_docs and self.avgdl.
-        raise NotImplementedError
+        for doc_id, text in enumerate(docs):
+            tokens=tokenize(text)
+            self.doc_len.append(len(tokens))
+            counts=Counter(tokens) #counts the occurence of each token
+            for term,tf in counts.items():
+                self.index[term].append((doc_id,tf))
+
+        self.n_docs=len(docs)
+        self.avgdl=sum(self.doc_len)/len(docs)
 
     def idf(self, term: str) -> float:
         # TODO: use len(self.index[term]) as df. Careful: indexing a defaultdict
