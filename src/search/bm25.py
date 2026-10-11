@@ -47,9 +47,8 @@ class BM25:
         self.avgdl=sum(self.doc_len)/len(docs)
 
     def idf(self, term: str) -> float:
-        # TODO: use len(self.index[term]) as df. Careful: indexing a defaultdict
-        #       with an unseen term inserts it. Use .get().
-        raise NotImplementedError
+        df=len(self.index.get(term,[])) #get posting list safely
+        return math.log(1+(self.n_docs-df+0.5)/(df+0.5))
 
     def search(self, query: str, k: int = 10) -> list[tuple[int, float]]:
         # TODO: accumulate scores per doc via the inverted index,
