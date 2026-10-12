@@ -16,7 +16,8 @@ cross-encoder reranking, and a FastAPI service with Docker and CI.
 
 ## Current state
 
-**Phase 0 complete.** Repo hygiene done. Tests not yet passing (BM25 not yet implemented).
+**Phase 1 complete.** BM25 implemented and tested. Latency baseline measured.
+Next: Phase 2 — evaluation harness (labeled queries, nDCG@10, MRR, recall@k).
 
 ---
 
