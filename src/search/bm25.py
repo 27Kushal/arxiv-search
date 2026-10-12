@@ -51,9 +51,20 @@ class BM25:
         return math.log(1+(self.n_docs-df+0.5)/(df+0.5))
 
     def search(self, query: str, k: int = 10) -> list[tuple[int, float]]:
-        # TODO: accumulate scores per doc via the inverted index,
-        #       return the top-k (doc_id, score) sorted high to low.
-        raise NotImplementedError
+        tokens=tokenize(query)
+        scores=defaultdict(float)
+
+        for term in tokens:
+            idf = self.idf(term)            # computed once per term, not once per posting
+            for doc_id, tf in self.index.get(term, []):
+                dl = self.doc_len[doc_id]
+                num = tf * (self.k1 + 1)
+                den = tf + self.k1 * (1 - self.b + self.b * dl / self.avgdl)
+                scores[doc_id] += idf * num / den
+
+        #sort and return top-k
+        ranked=sorted(scores.items(),key=lambda x: x[1],reverse=True)
+        return ranked[:k]
 
 
 if __name__ == "__main__":

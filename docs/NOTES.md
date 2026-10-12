@@ -33,7 +33,35 @@ cross-encoder reranking, and a FastAPI service with Docker and CI.
 
 ## Measured numbers
 
-*(None yet. Every number added here must state: what was measured, on what hardware, with what dataset size, at what date.)*
+All numbers below: MacBook (CPU only), Python 3.13.7, 380,128 papers (data/papers.jsonl),
+`title + ". " + abstract` as the document text. Date: 2026-10-12.
+
+### Phase 1 — BM25 baseline
+
+| Metric | Value |
+|---|---|
+| Index build time | 16.17 s |
+| Unique index terms | 284,837 |
+| Avg document length | 190.8 tokens |
+| Query p50 latency (overall, 8 queries × 100 runs) | 113.9 ms |
+| Query p95 latency (overall) | 199.0 ms |
+
+Per-query breakdown (p50 / p95):
+
+| Query | p50 ms | p95 ms | Note |
+|---|---|---|---|
+| kv cache compression | 3.0 | 3.5 | Rare terms → tiny posting lists |
+| attention mechanism transformer | 31.0 | 33.8 | |
+| low rank adaptation fine tuning | 53.8 | 65.5 | |
+| contrastive learning visual representations | 115.7 | 126.2 | |
+| diffusion model image generation | 125.6 | 137.9 | |
+| graph neural network molecular property | 82.5 | 88.2 | |
+| large language model inference | 179.5 | 197.6 | |
+| reinforcement learning from human feedback | 198.0 | 254.9 | Common terms ("learning", "from") → huge posting lists |
+
+**Known bottleneck:** high-frequency stopwords ("from", "learning", "in") have near-zero IDF
+but long posting lists. Walking them dominates latency. Fix candidates: IDF threshold skip
+during search, or stopword filter at tokenize time. Neither applied yet — baseline only.
 
 ---
 
@@ -42,13 +70,15 @@ cross-encoder reranking, and a FastAPI service with Docker and CI.
 - `data/papers.jsonl` field `date` is arXiv's `update_date`. For submission year, parse the arXiv ID prefix instead.
 - `scripts/harvest_arxiv.py` is untested against the live server. Do not run without a small `--limit` test first.
 - Global gitignore (`~/.gitignore_global`) is not configured by the tool; user manages this manually.
+- BM25 search latency is dominated by common-word posting lists. p95 is ~200ms. Acceptable for now; will improve in hybrid phase.
 
 ---
 
 ## What's done
 
 - [x] Phase 0: venv (Python 3.13.7), requirements.txt / requirements-dev.txt, data/.gitkeep, docs/ scaffold
+- [x] Phase 1: BM25 fit/idf/search implemented from scratch; 7/7 tests pass; latency measured on 380k papers
 
 ## What's next
 
-- [ ] Phase 1: Implement BM25 `fit()`, `idf()`, `search()` in `src/search/bm25.py`; pass all 7 tests; measure index build time and per-query latency on 380k papers
+- [ ] Phase 2: Evaluation harness — write ~60-100 labeled queries, implement nDCG@10 / MRR / recall@k
